@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+output/*
+!output/.gitkeep
+data/processed/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/paper.pdf
+.DS_Store

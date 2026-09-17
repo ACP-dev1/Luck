@@ -1,0 +1,201 @@
+\documentclass[11pt,a4paper]{article}
+\input{preamble}
+\fancyhead[R]{\footnotesize\scshape Timing luck}
+
+\begin{document}
+\selectlanguage{danish}
+\thispagestyle{empty}
+
+\begin{center}
+  {\Large\bfseries Hvor meget af en regimestrategis afkast er held med datoen?\par}
+  \vspace{0.3em}
+  {\large Timing luck i månedligt rebalancerede aktieallokeringer\par}
+  \vspace{1.4em}
+  {\large Albert \textsc{[Efternavn]}\footnote{Økonomisk Institut,
+   Københavns Universitet. Kontakt: \texttt{[mail]}. Replikationskode og data:
+   \url{https://github.com/[bruger]/08-timing-luck}.}\par}
+  \vspace{0.8em}
+  {\normalsize Denne version: \today\par}
+\end{center}
+
+\vspace{1.2em}
+\begin{center}\begin{minipage}{0.85\textwidth}\small
+\begin{center}\textsc{Resumé}\end{center}
+\noindent
+En strategi, der skifter mellem offensiv og defensiv aktieeksponering én gang
+om måneden, er i virkeligheden 21 forskellige strategier --- én for hver
+mulige handelsdag. Jeg kører den samme regimemodel med alle 21
+rebalanceringsdage på amerikanske data fra 2003 til 2026. Sharpe varierer fra
+0,618 til 0,735 alene som følge af datovalget, et spænd på 0,117. Til
+sammenligning slår medianvarianten en passiv aktieposition med 0,096 i Sharpe.
+Spredningen på tværs af arbitrære datovalg overstiger altså den effekt,
+strategien skal påvise. Opdelt på episoder er billedet skarpere: i finanskrisen
+går det maksimale tab fra $-9{,}3$ til $-24{,}3$ procent alt efter
+rebalanceringsdag, mens modellen i marts 2020 gav nul beskyttelse og i 2022 var
+marginalt dårligere end en passiv position. Hele risikoreduktionen stammer fra
+én episode, og dens størrelse er i vid udstrækning tilfældig.
+\end{minipage}\end{center}
+
+\vspace{0.8em}
+\begin{center}\begin{minipage}{0.85\textwidth}\small
+\noindent\textsc{Nøgleord:} regimeskift, rebalancering, timing luck, aktieallokering\\
+\noindent\textsc{JEL:} G11, G17
+\end{minipage}\end{center}
+
+\vfill
+\begin{center}\small\textit{Studieprojekt på offentlige data. Ikke investeringsrådgivning.}\end{center}
+\clearpage\setcounter{page}{1}
+
+\section{Motivation}
+Backtests af månedlige strategier rapporteres næsten altid for én
+rebalanceringsdato, typisk månedens sidste handelsdag. Valget er arbitrært, og
+hvis resultatet afhænger stærkt af det, er den rapporterede præstation delvis
+held. Det er en test, der koster lidt kode og kan ændre fortolkningen af en hel
+strategi.
+
+Jeg finder, at spredningen i Sharpe på tværs af de 21 mulige
+rebalanceringsdage er større end strategiens fortrin over en passiv
+benchmark. Den centrale observation er dog ikke spredningen i sig selv, men
+hvor den kommer fra: modellen leverer sin risikoreduktion i præcis én af tre
+store nedture, og netop i den episode er udfaldet mest følsomt over for
+datovalget.
+
+\section{Data}
+Daglige afkast på SPY (bredt amerikansk aktieindeks) som offensiv position og
+SHY (korte statsobligationer) som defensiv, udbyttejusterede, fra
+2.~januar 2003 til 17.~september 2026, i alt 5.965 handelsdage. Perioden
+begynder, hvor SHY har fuld historik.
+
+Makrovariable fra FRED: rentekurvens hældning (\texttt{T10Y2Y}) og
+arbejdsløsheden (\texttt{UNRATE}). Kurvehældningen er markedsdata og indgår med
+samme dags værdi. Arbejdsløsheden offentliggøres først i måneden efter
+referencemåneden, og observationsdatoen er derfor skubbet en måned frem, så
+backtestet ikke handler på tal, der endnu ikke var kendt. Uden den justering
+overvurderes strategiens præstation systematisk.
+
+\section{Metode}
+Regimeindikatoren er en sum af tre binære signaler: positiv kurvehældning,
+faldende arbejdsløshed over 12 måneder, og indeks over sit eget 200-dages
+gennemsnit. Ved score $\geq 2$ holdes den offensive position, ellers den
+defensive. Positionen sættes på rebalanceringsdagen og anvendes fra dagen efter.
+
+Strategien køres $k=1,\dots,21$ gange, hvor $k$ angiver hvilken handelsdag i
+måneden der rebalanceres. Alle 21 varianter implementerer samme model og har
+samme forventede afkast; forskellen mellem dem er udelukkende et arbitrært
+implementeringsvalg. Maksimalt drawdown er beregnet på kumulerede logafkast.
+
+\subsection{Forventede fortegn}
+Fastlagt før estimation. Alle 21 varianter bør have samme forventede afkast.
+Forventningen var, at den realiserede spredning alligevel ville være
+sammenlignelig med strategiens merafkast over benchmark. Var spredningen lille,
+ville konklusionen være, at strategien er robust --- også et resultat værd at
+rapportere.
+
+\section{Resultater}
+Tabel~\ref{tab:udfald} viser fordelingen af udfald over de 21 varianter.
+
+\begin{table}[htbp]\centering
+\caption{Udfald på tværs af 21 rebalanceringsdage, 2003--2026}
+\label{tab:udfald}\small
+\begin{tabularx}{0.9\textwidth}{Xccccc}
+\toprule
+& Min & Median & Maks & Spredning & Passiv \\
+\midrule
+Sharpe            & 0,618 & 0,678 & 0,735 & 0,032 & 0,582 \\
+Årligt afkast     & 0,088 & 0,096 & 0,105 & 0,004 & 0,108 \\
+Maks.\ drawdown   & $-0{,}411$ & $-0{,}411$ & $-0{,}411$ & 0,000 & $-0{,}803$ \\
+\bottomrule
+\end{tabularx}
+\vspace{0.4em}
+\begin{minipage}{0.9\textwidth}\footnotesize
+\textit{Noter:} Drawdown på kumulerede logafkast. Passiv er en position i SPY
+gennem hele perioden.
+\end{minipage}
+\end{table}
+
+Spændet i Sharpe er $0{,}735-0{,}618=0{,}117$. Medianvarianten slår den passive
+benchmark med $0{,}678-0{,}582=0{,}096$. Forskellen mellem den heldigste og den
+uheldigste implementering af den samme model er altså \emph{større} end hele
+modellens fortrin over ikke at gøre noget. Afkastet er samtidig lavere end
+passiv i alle 21 varianter, så Sharpe-gevinsten kommer udelukkende fra
+risikoreduktion.
+
+Det samlede drawdown er identisk for alle 21 varianter, hvilket først ligner en
+fejl. Forklaringen er substantiel: alle varianter har samme peak
+(19.~februar 2020) og samme trough (23.~marts 2020), fordi ingen af dem nåede
+at gå defensivt under COVID-krakket. Regimescoren faldt fra 3 til 2, da indekset
+brød sit 200-dages gennemsnit, men 2 er netop tærsklen, og de to
+makrosignaler vendte ikke i tide.
+
+Tabel~\ref{tab:episoder} opdeler derfor drawdown på de tre store nedture i
+perioden.
+
+\begin{table}[htbp]\centering
+\caption{Maksimalt drawdown inden for hver episode}
+\label{tab:episoder}\small
+\begin{tabularx}{0.9\textwidth}{Xccccc}
+\toprule
+Episode & Min & Median & Maks & Spredning & Passiv \\
+\midrule
+Finanskrisen (okt.\ 2007--mar.\ 2009) & $-0{,}243$ & $-0{,}114$ & $-0{,}093$ & 0,046 & $-0{,}803$ \\
+COVID (feb.--apr.\ 2020)              & $-0{,}411$ & $-0{,}411$ & $-0{,}411$ & 0,000 & $-0{,}411$ \\
+Inflationsåret (jan.--okt.\ 2022)     & $-0{,}293$ & $-0{,}261$ & $-0{,}261$ & 0,007 & $-0{,}281$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Tre ting følger. For det første leverer modellen kun beskyttelse i
+finanskrisen, hvor tabet reduceres fra 80 til mellem 9 og 24 procent. For det
+andet er netop den episode, hvor modellen virker, også den, hvor datovalget
+betyder mest: forholdet mellem det værste og det bedste udfald er 2,6. For det
+tredje gav modellen ingen beskyttelse i 2020 og var i 2022 i sit dårligste
+udfald marginalt værre end passiv.
+
+De 21 varianter holder samme position på 96,5 procent af dagene i gennemsnit,
+og mindst 93,8 procent for det mest forskellige par. Antallet af regimeskift
+over de 23 år er 15 til 19. Hele spredningen i udfald stammer altså fra et
+tocifret antal beslutninger, hvor nogle varianter rammer få dage tidligere end
+andre.
+
+\section{Robusthed}
+Tre tjek er gennemført. Episodeopdelingen ovenfor viser, at det samlede
+drawdown skjuler et helt andet mønster end det, tabel~\ref{tab:udfald}
+antyder. Positionsoverlappet dokumenterer, at varianterne er næsten identiske i
+implementering og alligevel adskiller sig markant i udfald. Og optællingen af
+regimeskift viser, at resultatet hviler på få begivenheder, hvilket i sig selv
+begrænser, hvor stærkt spredningen kan tolkes.
+
+Tre tjek udestår: \tbd{kvartalsvis rebalancering, hvor spredningen forventes
+større}, \tbd{variation af regimetærsklen til $\geq 1$ og $\geq 3$} og
+\tbd{en overlappende portefølje, der holder $1/21$ i hver variant, som et bud
+på, hvad man kan gøre ved problemet}.
+
+\section{Begrænsninger}
+Regimemodellen er bevidst simpel og er ikke et forsøg på at replikere nogen
+konkret forvalters model; resultatet siger noget om klassen af månedligt
+rebalancerede regimestrategier, ikke om en bestemt af dem.
+Offentliggørelsesforsinkelsen for arbejdsløsheden er approksimeret som præcis
+én måned.
+
+Vigtigst er dog, at perioden indeholder tre store nedture og 15--19
+regimeskift. Spredningen mellem varianterne er dermed selv estimeret på få
+begivenheder, og tallet $0{,}046$ for spredningen i finanskrisen hviler reelt
+på én episode. Transaktionsomkostninger indgår ikke; med højst 19 skift over 23
+år ville de dog ikke ændre konklusionen.
+
+\section{Konklusion}
+Et backtest af en månedligt rebalanceret regimestrategi rapporterer ét udfald
+blandt 21 lige gyldige. På disse data spænder Sharpe over 0,117 på tværs af det
+valg, mens strategiens fortrin over en passiv position er 0,096. Den
+rapporterede præstation kan altså ikke adskilles fra held med en dato, ingen
+har begrundet.
+
+Konklusionen skærpes af episodeopdelingen. Modellens værdi ligger udelukkende i
+finanskrisen, og netop dér svinger det undgåede tab med en faktor 2,6 mellem
+den bedste og den værste rebalanceringsdag. I 2020, hvor nedturen var for
+hurtig til, at makrosignalerne kunne nå at vende, gav modellen ingen
+beskyttelse overhovedet. En strategi, der beskytter i én ud af tre kriser, og
+hvis beskyttelse i det ene tilfælde varierer med en faktor 2,6 efter et
+arbitrært implementeringsvalg, bør ikke rapporteres med ét Sharpe-tal.
+
+\end{document}
