@@ -10,3 +10,4 @@ paper/*.fls
 paper/*.fdb_latexmk
 paper/paper.pdf
 .DS_Store
+.github/
